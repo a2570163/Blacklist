@@ -4,20 +4,143 @@
     <meta charset="UTF-8">
 
     {% load staticfiles %}
-    <link href="{% static 'css/metro.css' %}" rel="stylesheet">
-    <link href="{% static 'css/metro-icons.css' %}" rel="stylesheet">
-    <link href="{% static "css/metro-responsive.css" %}" rel="stylesheet">
+    <link type="text/css" href="{% static 'css/metro.css' %}" rel="stylesheet">
+    <link type="text/css" href="{% static 'css/metro-icons.css' %}" rel="stylesheet">
+    <link type="text/css" href="{% static "css/metro-responsive.css" %}" rel="stylesheet">
 
-    <script src="{% static "js/jquery-2.1.3.min.js" %}"></script>
-    <script src="{% static "js/metro.js" %}"></script>
-    <script src="{% static "js/jquery.dataTables.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/jquery-2.1.3.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/metro.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/jquery.dataTables.min.js" %}"></script>
 
     <title>Edit page</title>
+
+    <script type="text/javascript">
+        {#        Delete email from blacklist#}
+        function deleteEmailFromBlacklist(email, user_id) {
+            $.ajax({
+                method: 'POST',
+                url: "{% url 'deleteDbByAjax' %}",
+                cache: false,
+                dataType: 'json',
+                data: {
+                    email: email,
+                    user_id: user_id,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (data) {
+                    console.log(data.result);
+                    $.Notify({
+                        type: 'info',
+                        keepOpen: true,
+                        caption: 'Message',
+                        content: data.result,
+                        icon: '<span class="mif-info"></span>'
+                    });
+                    loadBlacklistTable();
+                }
+            });
+        }
+
+        {#        Load blacklist table     #}
+        function loadBlacklistTable() {
+            {#            Display blacklist Table#}
+            $('#blacklist').css('display', 'block');
+            {#            Hide and empty suggestion list#}
+            $('#suggestions').html('').css('display', 'none');
+            $.ajax({
+                method: 'POST',
+                url: "{% url 'ajaxSearch' %}",
+                cache: false,
+                dataType: 'json',
+                data: {
+                    email: $('#search-in-blacklist-with-ajax').val(),
+                    user_id: {{ user.id }},
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (data) {
+                    var result = $.parseJSON(data.emaillist);
+                    var counter = 1;
+                    var resultlist = '<table class="dataTable striped hovered cell-hovered border bordered" data-role="datatable" data-auto-width="false" data-searching="false">' +
+                            '<thead><tr>' +
+                            '<td class="sortable-column sort-asc">Number</td>' +
+                            '<td class="sortable-column">Email</td>' +
+                            '<td class="sortable-column">User ID</td>' +
+                            '<td class="sortable-column">Type</td>' +
+                            '<td style="width: 40px"></td>' +
+                            '</tr></thead><tbody>';
+                    $.each(result, function (i, item) {
+                        if (i >= 0) {
+                            resultlist += '<tr>' +
+                                    '<td>' + counter + '</td>' +
+                                    '<td>' + item.fields.email + '</td>' +
+                                    '<td>' + item.fields.user_id + '</td>' +
+                                    '<td>' + item.fields.type + '</td>' +
+                                    '<td><button class="button warning" onclick="deleteEmailFromBlacklist(\'' + item.fields.email + '\',\'' + item.fields.user_id + '\');"><span class="mif-bin"></span>Delete</button></td>' +
+                                    '</tr>';
+                        } else {
+                            resultlist = '';
+                        }
+                        ++counter;
+                    });
+                    resultlist += '</tbody></table>';
+                    $('#blacklist').html(resultlist);
+                }
+            });
+        }
+
+        {#        Fill the selected suggestion into the searching input     #}
+        function fillIntoSearch(obj) {
+            $('#search-in-blacklist-with-ajax').val($(obj).text());
+        }
+
+        {#        Ajax query for keyup event of the searching input    #}
+        function ajaxSearch() {
+            $('#search-in-blacklist-with-ajax').keyup(function () {
+                if ($(this).val().length <= 0) {
+                    $('#suggestions').html('').css('display', 'none');
+                    return;
+                } else {
+                    $.ajax({
+                        method: 'POST',
+                        url: "{% url 'ajaxSearch' %}",
+                        cache: false,
+                        dataType: 'json',
+                        data: {
+                            email: $(this).val(),
+                            user_id: {{ user.id }},
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (data) {
+                            var result = $.parseJSON(data.emaillist);
+                            var resultlist = '';
+                            $.each(result, function (i, item) {
+                                if (i >= 0) {
+                                    $('#suggestions').css({'width': $('#search-in-blacklist-with-ajax').width() + 4});
+                                    resultlist += '<div class="list"><div class="list-content"><span class="list-subtitle" onclick="fillIntoSearch(this);">' + item.fields.email + '</span></div></div>';
+                                } else {
+                                    resultlist = '';
+                                }
+
+                                console.log(i + '----' + item.fields.email);
+                            });
+                            $('#suggestions').html(resultlist).css('display', 'block');
+                        }
+                    });
+                }
+            });
+        }
+
+        <!-- While the page loaded -->
+        $(document).ready(function () {
+            ajaxSearch();
+            $('#blacklist').css('display', 'none');
+        });
+    </script>
 </head>
 <body>
 <!-- Header -->
 <div style="margin-top: 30px">
-    <h1 class="tile-area-title fg-cyan" style="display: inline-block; font-weight: 500; margin-left: 20px">Critsend</h1>
+    <h1 class="tile-area-title fg-cyan" style="display: inline-block; font-weight: 500; margin-left: 20px">Welcome</h1>
     <div class="tile-area-controls padding10" style="float: right; display: inline-block;">
         <button class="image-button icon-right bg-transparent fg-dark bg-hover-teal no-border"
                 style="background-color: transparent"><span
@@ -126,56 +249,52 @@
     <!-- 3. Search blacklist from database with AJAX -->
     <div>
         <h4>3. Search blacklist from database with AJAX</h4>
-        <script>
-            $.fn.dataTable.ext.search.push(
-                    function (settings, data, dataIndex) {
-                        $('#type_filter').on('change', function () {
-                            var type_filter = $(this).children('option:selected').text();
-
-
-                        });
-                    }
-            );
-            $(document).ready(function () {
-                $('#example').DataTable( {
-
-                } );
-            });
-        </script>
         <div class="padding20 block-shadow">
             <div class="cell auto-size padding20 bg-white">
-                <h4 class="text-light">
-                    <select id="type_filter">
-                        <option value="all" selected>All</option>
-                        <option value="blacklist">Blacklist</option>
-                        <option value="bounce">Bounce</option>
-                    </select>
-                </h4>
-                <hr class="thin bg-grayLighter">
-                <table class="dataTable striped hovered cell-hovered border bordered" data-role="datatable"
-                       data-auto-width="false" id="blacklist">
-                    <thead>
-                    <tr>
-                        <td class="sortable-column sort-asc">ID</td>
-                        <td class="sortable-column">Email</td>
-                        <td class="sortable-column">User ID</td>
-                        <td class="sortable-column">Type</td>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for blacklist in blacklists %}
-                        <tr>
-                            <td>{{ blacklist.id }}</td>
-                            <td>{{ blacklist.email }}</td>
-                            <td>{{ blacklist.user_id }}</td>
-                            <td>{{ blacklist.type }}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                Search:
+                <div class="input-control text" data-role="input">
+                    <input type="text" id="search-in-blacklist-with-ajax">
+                    <button class="button" onclick="loadBlacklistTable()"><span class="mif-search"></span></button>
+                </div>
+                <div id="suggestions" class="listview-outlook" data-role="listview"></div>
+                <div id="blacklist">
+
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Extra: 4. Using pure javascript -->
+    {#    <div>#}
+    {#        <h4>Extra: 4. Using pure javascript</h4>#}
+    {#        <div class="padding20 block-shadow">#}
+    {#            <div class="cell auto-size padding20 bg-white">#}
+    {#                <h4 class="text-light"> Blacklist </h4>#}
+    {#                <hr class="thin bg-grayLighter">#}
+    {#                <table class="dataTable striped hovered cell-hovered border bordered" data-role="datatable"#}
+    {#                       data-auto-width="false" id="blacklist">#}
+    {#                    <thead>#}
+    {#                    <tr>#}
+    {#                        <td class="sortable-column sort-asc">ID</td>#}
+    {#                        <td class="sortable-column">Email</td>#}
+    {#                        <td class="sortable-column">User ID</td>#}
+    {#                        <td class="sortable-column">Type</td>#}
+    {#                    </tr>#}
+    {#                    </thead>#}
+    {#                    <tbody>#}
+    {#                    {% for blacklist in blacklists %}#}
+    {#                        <tr>#}
+    {#                            <td>{{ blacklist.id }}</td>#}
+    {#                            <td>{{ blacklist.email }}</td>#}
+    {#                            <td>{{ blacklist.user_id }}</td>#}
+    {#                            <td>{{ blacklist.type }}</td>#}
+    {#                        </tr>#}
+    {#                    {% endfor %}#}
+    {#                    </tbody>#}
+    {#                </table>#}
+    {#            </div>#}
+    {#        </div>#}
+    {#    </div>#}
 
 </div>
 <!-- End of Main Content-->

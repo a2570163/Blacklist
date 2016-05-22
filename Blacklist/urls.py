@@ -28,6 +28,14 @@ urlpatterns = [
     # Edit process page
     ##########
     url(r'^edit_process/$', app_views.editProcess, name='editProcess'),
+    ###########
+    # Ajax search page
+    ##########
+    url(r'^ajax_search/$', app_views.ajaxSearch, name='ajaxSearch'),
+    ###########
+    # Ajax delete db page
+    ##########
+    url(r'^delete_db/$', app_views.deleteDbByAjax, name='deleteDbByAjax'),
     ############
     # Admin page
     ############

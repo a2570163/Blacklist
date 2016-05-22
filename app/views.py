@@ -1,23 +1,21 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from app.forms import AddBlacklistFormByManual, AddBlacklistFormByCSV
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from app.models import Blacklist
 import csv
 from django.core.exceptions import ObjectDoesNotExist
+from django.core import serializers
 
 
 # Create your views here.
 @login_required(login_url='/')
 def editBlackList(request):
-    blacklist = Blacklist.objects.all()
     return render(request,
                   'edit.html',
                   {
                       'add_blacklist_form_by_manual': AddBlacklistFormByManual,
                       'add_blacklist_form_by_CSV': AddBlacklistFormByCSV,
-                      'blacklists': blacklist,
-                      'blacklistcount': blacklist.count()
                   })
 
 
@@ -81,3 +79,35 @@ def editProcess(request):
             pass
 
     return HttpResponseRedirect('/edit/')
+
+
+@login_required(login_url='/')
+def ajaxSearch(request):
+    content = {}
+    if request.method == 'POST':
+        print request.POST
+        emaillist = serializers.serialize('json', Blacklist.objects.filter(email__istartswith=request.POST['email'],
+                                                                           user_id=request.POST['user_id']))
+        content['emaillist'] = emaillist
+    else:
+        content['emaillist'] = 'Error, method not allowed.'
+    return JsonResponse(content)
+
+
+@login_required(login_url='/')
+def deleteDbByAjax(request):
+    content = {}
+    if request.method == 'POST':
+        print request.POST
+        try:
+            targetEmail = Blacklist.objects.get(email=request.POST['email'], user_id=request.POST['user_id'])
+        except ObjectDoesNotExist:
+            # Object not exist
+            content['result'] = 'Delete failed.'
+        else:
+            # Object exists
+            targetEmail.delete()
+            content['result'] = 'Delete successful.'
+    else:
+        content['result'] = 'Error, method not allowed.'
+    return JsonResponse(content)
