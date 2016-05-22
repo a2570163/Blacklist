@@ -11,6 +11,10 @@ from django.core import serializers
 # Create your views here.
 @login_required(login_url='/')
 def editBlackList(request):
+    """
+    :param request: When the edit page has been loaded, this function will be called automatically
+    :return: Render two forms('AddBlacklistFormByManual' and 'AddBlacklistFormByCSV') to the edit page
+    """
     return render(request,
                   'edit.html',
                   {
@@ -21,6 +25,12 @@ def editBlackList(request):
 
 @login_required(login_url='/')
 def editProcess(request):
+    """
+    :param request: Requests from users, and it has been separated from two parts.
+                        - 1. Request from form 'AddBlacklistFormByManual'
+                        - 2. Request from form 'AddBlacklistFormByCSV'
+    :return: The information after processing by different ways: Error or success, and event the error's reason
+    """
     if request.method == 'POST':
         if 'manual' == request.POST['update_type']:
             addBlacklistFormByManual = AddBlacklistFormByManual(request.POST)
@@ -83,6 +93,10 @@ def editProcess(request):
 
 @login_required(login_url='/')
 def ajaxSearch(request):
+    """
+    :param request: Request from the ajax searching form, by using the searching input
+    :return: Information after processing, in JSON format
+    """
     content = {}
     if request.method == 'POST':
         print request.POST
@@ -96,6 +110,12 @@ def ajaxSearch(request):
 
 @login_required(login_url='/')
 def deleteDbByAjax(request):
+    """
+    :param request: Request from the Data Table, by clicking the beside 'delete' button.
+                    This function using the AJAX too, to delete the selected objects from the database.
+                    For do not refresh the whole page or the data table after deleting action.
+    :return: Information after processing, in JSON format
+    """
     content = {}
     if request.method == 'POST':
         print request.POST

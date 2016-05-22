@@ -115,7 +115,7 @@
                             var resultlist = '';
                             $.each(result, function (i, item) {
                                 if (i >= 0) {
-                                    $('#suggestions').css({'width': $('#search-in-blacklist-with-ajax').width() + 4});
+                                    $('#suggestions').css({'width': $('#search-in-blacklist-with-ajax').width() + 70});
                                     resultlist += '<div class="list"><div class="list-content"><span class="list-subtitle" onclick="fillIntoSearch(this);">' + item.fields.email + '</span></div></div>';
                                 } else {
                                     resultlist = '';
@@ -263,39 +263,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Extra: 4. Using pure javascript -->
-    {#    <div>#}
-    {#        <h4>Extra: 4. Using pure javascript</h4>#}
-    {#        <div class="padding20 block-shadow">#}
-    {#            <div class="cell auto-size padding20 bg-white">#}
-    {#                <h4 class="text-light"> Blacklist </h4>#}
-    {#                <hr class="thin bg-grayLighter">#}
-    {#                <table class="dataTable striped hovered cell-hovered border bordered" data-role="datatable"#}
-    {#                       data-auto-width="false" id="blacklist">#}
-    {#                    <thead>#}
-    {#                    <tr>#}
-    {#                        <td class="sortable-column sort-asc">ID</td>#}
-    {#                        <td class="sortable-column">Email</td>#}
-    {#                        <td class="sortable-column">User ID</td>#}
-    {#                        <td class="sortable-column">Type</td>#}
-    {#                    </tr>#}
-    {#                    </thead>#}
-    {#                    <tbody>#}
-    {#                    {% for blacklist in blacklists %}#}
-    {#                        <tr>#}
-    {#                            <td>{{ blacklist.id }}</td>#}
-    {#                            <td>{{ blacklist.email }}</td>#}
-    {#                            <td>{{ blacklist.user_id }}</td>#}
-    {#                            <td>{{ blacklist.type }}</td>#}
-    {#                        </tr>#}
-    {#                    {% endfor %}#}
-    {#                    </tbody>#}
-    {#                </table>#}
-    {#            </div>#}
-    {#        </div>#}
-    {#    </div>#}
-
 </div>
 <!-- End of Main Content-->
 
